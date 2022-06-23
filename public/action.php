@@ -17,16 +17,18 @@ function updated($msg) {
     }
 
     if ($to_file) {
-        try {
-            $file = fopen($to_file, 'w');
-            $stmt = $db->query("SELECT DISTINCT addr FROM banned ORDER BY addr");
-            foreach ($stmt as $row) {
-                fwrite($file, inet_ntop($row['addr']) . "\n");
+        $file = @fopen($to_file, 'w');
+        if ($file) {
+            try {
+                $stmt = $db->query("SELECT DISTINCT addr FROM banned ORDER BY addr");
+                foreach ($stmt as $row) {
+                    @fwrite($file, inet_ntop($row['addr']) . "\n");
+                }
+            } catch (Exception $e) {
+                // Ignore exception
             }
-            fclose($file);
-        } catch (Exception $e) {
-            // Ignore exception
         }
+        @fclose($file);
     }
 
     send_response(200, $msg);
@@ -35,9 +37,9 @@ function updated($msg) {
 $db = new PDO($dsn);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
 
-$addr = empty($_POST['addr']) ? null : filter_var($_POST['addr'], FILTER_SANITIZE_STRING);
-$host = empty($_POST['host']) ? null : filter_var($_POST['host'], FILTER_SANITIZE_STRING);
-$token = empty($_POST['token']) ? null : filter_var($_POST['token'], FILTER_SANITIZE_STRING);
+$addr = !empty($_POST['addr']) && filter_var($_POST['addr'], FILTER_VALIDATE_IP) ? $_POST['addr'] : null;
+$host = !empty($_POST['host']) ? substr(trim(filter_var($_POST['host'], FILTER_SANITIZE_STRING)), 0, 16) : null;
+$token = !empty($_POST['token']) ? filter_var($_POST['token'], FILTER_SANITIZE_STRING) : null;
 
 if (empty($addr) || empty($host)) {
     send_response(400, 'Bad request');
@@ -52,18 +54,20 @@ if (!empty($tokens)
 }
 
 $packed_addr = inet_pton($addr);
+$version = filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 4 : 6;
+
 if (empty($_POST['action']) || $_POST['action'] != 'delete') {
-    $stmt = $db->prepare("INSERT INTO banned (addr, host) VALUES (?, ?)");
-    if ($stmt->execute([$packed_addr, $host])) {
+    $stmt = $db->prepare("INSERT OR IGNORE INTO banned (addr, version, host) VALUES (?, ?, ?)");
+    if ($stmt->execute([$packed_addr, $version, $host])) {
         updated($addr . ' added');
     } else {
-        send_response(409, $addr . ' was not be added');
+        send_response(500, 'Internal server error');
     }
 } else {
     $stmt = $db->prepare("DELETE FROM banned WHERE addr=? AND host=?");
-    if ($stmt->execute([$packed_addr, $host]) && $stmt->rowCount() > 0) {
+    if ($stmt->execute([$packed_addr, $host])) {
         updated($addr . ' deleted');
     } else {
-        send_response(400, $addr . ' was not deleted');
+        send_response(500, 'Internal server error');
     }
 }

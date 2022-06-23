@@ -53,6 +53,11 @@ to `banned.php` and `action.php`. In addition, if `$to_file` is set in
 
     $ curl https://localhost:8080/banned.php
 
+### List Banned IPs by Protocol Version
+
+    $ curl https://localhost:8080/banned.php?ipv=4
+    $ curl https://localhost:8080/banned.php?ipv=6
+
 ### Add IP
 
     $ curl -X POST -F addr=10.0.0.100 -F host=myserver -F action=add -F token=mysecret https://localhost:8080/action.php
