@@ -37,11 +37,12 @@ Installation
 ### Configuration
   * `$dsn` - The PHP PDO DSN for the SQLite database
   * `$tokens` - An array of authentication tokens used for adding and deleting
-    IPs. Leaving the array empty will allow adds and deletes without tokens.
+    IPs. Leaving the array empty will allow adds and deletes without tokens
   * `max_age` - Maximum age of an IP entry. Used by `prune.php`
-  * `command` - Shell command to run after an IP is added or removed.
+  * `command` - Shell command to run after an IP is added or removed
+  * `ignore` - Array of IP addresses to ignore
   * `to_file` - Optional path of file to write banned IP list to after each
-    update.
+    update
 
 Use
 ---

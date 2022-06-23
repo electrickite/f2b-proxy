@@ -41,7 +41,7 @@ $addr = !empty($_POST['addr']) && filter_var($_POST['addr'], FILTER_VALIDATE_IP)
 $host = !empty($_POST['host']) ? substr(trim(filter_var($_POST['host'], FILTER_SANITIZE_STRING)), 0, 16) : null;
 $token = !empty($_POST['token']) ? filter_var($_POST['token'], FILTER_SANITIZE_STRING) : null;
 
-if (empty($addr) || empty($host)) {
+if (empty($addr) || empty($host) || in_array($addr, $ignore)) {
     send_response(400, 'Bad request');
     exit;
 }
