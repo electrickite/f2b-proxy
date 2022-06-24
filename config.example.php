@@ -15,7 +15,8 @@ $max_age = '1 day';
 $command = '';
 
 // IP addresses to ignore
-$ignore = ['127.0.0.1', '::1'];
+// (Reserved addresses are filtered regardless of this setting)
+$ignore = ['10.0.0.1'];
 
 // (optional) Write banned IP list to file path
 $to_file = 'banned.txt';

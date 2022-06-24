@@ -38,7 +38,7 @@ function updated($msg) {
 $db = new PDO($dsn);
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
 
-$addr = !empty($_POST['addr']) && filter_var($_POST['addr'], FILTER_VALIDATE_IP) ? $_POST['addr'] : null;
+$addr = !empty($_POST['addr']) && filter_var($_POST['addr'], FILTER_VALIDATE_IP, FILTER_FLAG_NO_RES_RANGE) ? $_POST['addr'] : null;
 $host = !empty($_POST['host']) ? substr(trim(filter_var($_POST['host'], FILTER_SANITIZE_STRING)), 0, 16) : null;
 $token = !empty($_POST['token']) ? filter_var($_POST['token'], FILTER_SANITIZE_STRING) : null;
 
