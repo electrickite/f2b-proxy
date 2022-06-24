@@ -23,6 +23,12 @@ try {
 }
 
 header('Content-Type: text/plain');
+
+$has_ip = false;
 foreach ($stmt as $row) {
+    $has_ip = true;
     echo inet_ntop($row['addr']) . "\n";
+}
+if (!$has_ip) {
+    echo "\n";
 }
