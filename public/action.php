@@ -5,6 +5,7 @@ function send_response($code, $message) {
     http_response_code($code);
     header('Content-Type: text/plain');
     echo $message;
+    exit;
 }
 
 function updated($msg) {
@@ -41,16 +42,16 @@ $addr = !empty($_POST['addr']) && filter_var($_POST['addr'], FILTER_VALIDATE_IP)
 $host = !empty($_POST['host']) ? substr(trim(filter_var($_POST['host'], FILTER_SANITIZE_STRING)), 0, 16) : null;
 $token = !empty($_POST['token']) ? filter_var($_POST['token'], FILTER_SANITIZE_STRING) : null;
 
-if (empty($addr) || empty($host) || in_array($addr, $ignore)) {
-    send_response(400, 'Bad request');
-    exit;
+if (!empty($tokens) && (empty($token) || !in_array($token, $tokens))) {
+    send_response(403, 'Forbidden');
 }
 
-if (!empty($tokens)
-    && (empty($token) || !in_array($token, $tokens))
-) {
-    send_response(403, 'Forbidden');
-    exit;
+if (empty($addr) || empty($host)) {
+    send_response(400, 'Bad request');
+}
+
+if (in_array($addr, $ignore)) {
+    send_response(200, "{$addr} ignored");
 }
 
 $packed_addr = inet_pton($addr);
@@ -59,15 +60,15 @@ $version = filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 4 : 6;
 if (empty($_POST['action']) || $_POST['action'] != 'delete') {
     $stmt = $db->prepare("INSERT OR IGNORE INTO banned (addr, version, host) VALUES (?, ?, ?)");
     if ($stmt->execute([$packed_addr, $version, $host])) {
-        updated($addr . ' added');
+        updated("{$addr} added");
     } else {
-        send_response(500, 'Internal server error');
+        send_response(500, "Error: {$addr} was not added");
     }
 } else {
     $stmt = $db->prepare("DELETE FROM banned WHERE addr=? AND host=?");
     if ($stmt->execute([$packed_addr, $host])) {
-        updated($addr . ' deleted');
+        updated("{$addr} deleted");
     } else {
-        send_response(500, 'Internal server error');
+        send_response(500, "Error: {$addr} was not deleted");
     }
 }
