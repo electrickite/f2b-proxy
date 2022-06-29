@@ -24,8 +24,8 @@ This tool serves as a part of this process:
 Dependencies
 ------------
   * PHP 7.0+
-  * PHP PDO
-  * SQLite 3
+  * PHP PDO SQLite extension
+  * SQLite 3.24+
   * PHP-capable web server
 
 Installation

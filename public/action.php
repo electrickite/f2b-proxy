@@ -1,6 +1,13 @@
 <?php
 include realpath(dirname(__FILE__) . '/../config.php');
 
+function addr_count($packed_addr) {
+    global $db;
+    $stmt = $db->prepare("SELECT COUNT(*) FROM banned WHERE addr=?");
+    $stmt->execute([$packed_addr]);
+    return $stmt ? $stmt->fetchColumn() : 0;
+}
+
 function send_response($code, $message) {
     http_response_code($code);
     header('Content-Type: text/plain');
@@ -58,21 +65,33 @@ $packed_addr = inet_pton($addr);
 $version = filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 4 : 6;
 
 if (empty($_POST['action']) || $_POST['action'] != 'delete') {
-    $query = "INSERT INTO banned (addr, version, host) VALUES (?, ?, ?)
-                ON CONFLICT
-                DO UPDATE SET updated_at=CURRENT_TIMESTAMP";
-    $stmt = $db->prepare($query);
-    if ($stmt->execute([$packed_addr, $version, $host])) {
+    $count = addr_count($packed_addr);
+
+    $stmt = $db->prepare("
+        INSERT INTO banned (addr, version, host) VALUES (?, ?, ?)
+        ON CONFLICT
+        DO UPDATE SET updated_at=CURRENT_TIMESTAMP
+    ");
+
+    if (!$stmt->execute([$packed_addr, $version, $host])) {
+        send_response(500, "Error: {$addr} was not added");
+    } else if ($count == 0) {
         updated("{$addr} added");
     } else {
-        send_response(500, "Error: {$addr} was not added");
+        send_response(200, "{$addr} added");
     }
 } else {
-    $query = "DELETE FROM banned WHERE addr=? AND host=?";
-    $stmt = $db->prepare($query);
-    if ($stmt->execute([$packed_addr, $host])) {
+    $stmt = $db->prepare("DELETE FROM banned WHERE addr=? AND host=?");
+    if (!$stmt->execute([$packed_addr, $host])) {
+        send_response(500, "Error: {$addr} was not deleted");
+    }
+
+    $deleted = $stmt->rowCount();
+    $count = addr_count($packed_addr);
+
+    if ($deleted > 0 && $count == 0) {
         updated("{$addr} deleted");
     } else {
-        send_response(500, "Error: {$addr} was not deleted");
+        send_response(200, "{$addr} deleted");
     }
 }
