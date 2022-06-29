@@ -58,14 +58,18 @@ $packed_addr = inet_pton($addr);
 $version = filter_var($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 4 : 6;
 
 if (empty($_POST['action']) || $_POST['action'] != 'delete') {
-    $stmt = $db->prepare("INSERT OR IGNORE INTO banned (addr, version, host) VALUES (?, ?, ?)");
+    $query = "INSERT INTO banned (addr, version, host) VALUES (?, ?, ?)
+                ON CONFLICT
+                DO UPDATE SET updated_at=CURRENT_TIMESTAMP";
+    $stmt = $db->prepare($query);
     if ($stmt->execute([$packed_addr, $version, $host])) {
         updated("{$addr} added");
     } else {
         send_response(500, "Error: {$addr} was not added");
     }
 } else {
-    $stmt = $db->prepare("DELETE FROM banned WHERE addr=? AND host=?");
+    $query = "DELETE FROM banned WHERE addr=? AND host=?";
+    $stmt = $db->prepare($query);
     if ($stmt->execute([$packed_addr, $host])) {
         updated("{$addr} deleted");
     } else {

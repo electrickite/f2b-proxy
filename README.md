@@ -52,20 +52,20 @@ to `banned.php` and `action.php`. In addition, if `$to_file` is set in
 
 ### List Banned IPs
 
-    $ curl https://localhost:8080/banned.php
+    $ curl http://localhost:8080/banned.php
 
 ### List Banned IPs by Protocol Version
 
-    $ curl https://localhost:8080/banned.php?ipv=4
-    $ curl https://localhost:8080/banned.php?ipv=6
+    $ curl "http://localhost:8080/banned.php?ipv=4"
+    $ curl "http://localhost:8080/banned.php?ipv=6"
 
 ### Add IP
 
-    $ curl -X POST -F addr=10.0.0.100 -F host=myserver -F action=add -F token=mysecret https://localhost:8080/action.php
+    $ curl -X POST -F addr=10.0.0.100 -F host=myserver -F action=add -F token=mysecret http://localhost:8080/action.php
 
 ### Delete IP
 
-    $ curl -X POST -F addr=10.0.0.100 -F host=myserver -F action=delete -F token=mysecret https://localhost:8080/action.phpa
+    $ curl -X POST -F addr=10.0.0.100 -F host=myserver -F action=delete -F token=mysecret http://localhost:8080/action.phpa
 
 ### Pruning old entries
 While Fail2Ban can be configured to both add and remove banned IPs, old
